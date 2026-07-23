@@ -1,0 +1,21 @@
+# build / install artifacts
+*.egg-info/
+build/
+dist/
+__pycache__/
+*.pyc
+
+# the server's on-disk cache (checkouts + built wheels), keyed by commit SHA
+.git-wheels-index/
+
+# generated client config + logs written by `git-wheels-index serve`
+git-wheels-index-pip.conf
+git-wheels-index.env
+server.log
+server.pid
+
+# local scratch venvs
+.venv/
+venv/
+target/
+replay/

@@ -1,0 +1,27 @@
+[project]
+name = "git-wheels-index"
+version = "0.1.0"
+description = "pip/uv wrapper adding on demand built development wheels to the package index."
+requires-python = ">=3.11"
+dependencies = [
+    "packaging>=23",
+    "Flask>=3",
+    "uv>=0.8",
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[project.scripts]
+with-git-wheels-index = "git_wheels_index.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["git_wheels_index"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]   # so bare `pytest` (as CI runs it) can import tests.conftest

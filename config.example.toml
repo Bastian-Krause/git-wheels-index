@@ -1,0 +1,66 @@
+# Example git-wheels-index configuration.
+#
+# Search order: --config PATH  >  ./git-wheels-index.toml  >
+#               $XDG_CONFIG_HOME/git-wheels-index/config.toml (~/.config/…)
+#
+# Everything here is optional. Unknown keys are rejected (typos fail loudly).
+# The server caches checkouts and built wheels under ./.git-wheels-index/ (keyed
+# by commit SHA); there is no [prepare] section.
+
+# ---------------------------------------------------------------------------
+# [repo_overrides] — correct or supply a package's source repo URL. The index
+# needs this to know which repo to build a package's git wheel from. Overrides
+# win over the auto-detection heuristic (installed / PyPI metadata).
+# ---------------------------------------------------------------------------
+[repo_overrides]
+# paho-mqtt = "https://github.com/eclipse-paho/paho.mqtt.python"
+# decorator = "https://github.com/micheles/decorator"
+# a #subdirectory= fragment is honoured (the package lives in a repo subfolder):
+# roman-numerals = "https://github.com/AA-Turner/roman-numerals#subdirectory=python"
+
+# ---------------------------------------------------------------------------
+# [sources.<name>] — per-package source directive. Types: git | pypi | prebuild.
+# Default (no entry): build the git wheel from the resolved repo's default branch.
+# ---------------------------------------------------------------------------
+
+# Pin a specific ref (tag/branch/sha) instead of the default branch:
+# [sources.some-pkg]
+# type = "git"
+# url  = "https://github.com/org/some-pkg"   # optional; else auto-resolved
+# ref  = "v2.1.0"
+
+# git source with a pre-build hook: the tool clones the repo, runs `commands` in
+# the checkout (codegen / cythonize / install headers / …), THEN builds the wheel
+# itself. Unlike `prebuild`, the commands are prep only — you don't produce the
+# wheel or set a `wheel` glob.
+# [sources.some-cython-pkg]
+# type = "git"
+# commands = ["make cythonize"]
+# subdirectory = "src"                       # optional: run commands + build here
+
+# Opt a package OUT of the git build entirely — the index returns 404 for it, so
+# pip/uv only ever see PyPI's released wheels:
+# [sources.numpy]
+# type = "pypi"
+
+# Exotic package that needs a custom build: the index clones it (full history +
+# tags), runs your `commands` in the checkout, then collects the wheel your
+# commands produced (via the required `wheel` glob). There is no tool-run build
+# step — your commands own the build. The built wheel's version is rewritten to
+# the announced <base>+g<sha> before it is served.
+#
+# Case 1 — the build tool emits the wheel itself (e.g. bazel, run from the root):
+# [sources.protobuf]
+# type = "prebuild"
+# repo = "https://github.com/protocolbuffers/protobuf"
+# ref  = "main"                               # optional; default branch otherwise
+# commands = ["bazel build //python/dist:binary_wheel"]
+# wheel = "bazel-bin/python/dist/*.whl"       # required: glob (relative to checkout root)
+# # subdirectory = "sub"                       # optional: run commands in a subdir instead
+#
+# Case 2 — a prep step then a normal build (spell the build out):
+# [sources.aiohttp]
+# type = "prebuild"
+# repo = "https://github.com/aio-libs/aiohttp"
+# commands = ["make cythonize", "uv build --wheel . -o dist"]
+# wheel = "dist/*.whl"
